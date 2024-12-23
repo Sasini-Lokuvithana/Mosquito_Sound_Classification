@@ -1,0 +1,72 @@
+[num_b, den_b] = butter(6, [30, 510] / (8000 / 2), 'bandpass');
+[num_m, den_m] = butter(6, [560,1050] / (8000 / 2), 'bandpass');
+dengue_dir = 'F:\eng\5TH SEM\MY WORKS\DSP\Task 02\Traning\dengue\';
+non_dengue_dir = 'F:\eng\5TH SEM\MY WORKS\DSP\Task 02\Traning\non-dengue\';
+
+d = dir([dengue_dir, '*.wav']);
+nd = dir([non_dengue_dir, '*.wav']);
+
+R_dengue = zeros(length(d), 1);
+R_Ndengue = zeros(length(nd), 1);
+
+L2 = 8192;
+for N = 1:max(length(d), length(nd))
+    if N <= length(d)
+        wavD = d(N).name;
+        [ydengue, Fsdengue] = audioread([dengue_dir, wavD]);
+        
+        yDe1 = fft(ydengue, L2);
+        yU1 = abs(yDe1);
+    end
+    
+    if N <= length(nd)
+        wavN = nd(N).name;
+        [yNdengue, FsNdengue] = audioread([non_dengue_dir, wavN]);
+        
+        yDe2 = fft(yNdengue, L2);
+        yU2 = abs(yDe2);
+    end
+    
+    figure;
+    if N <= length(d)
+        plot((0:(L2/2)-1) * Fsdengue / L2, yU1(1:L2/2), 'm');
+        hold on;
+    end
+    if N <= length(nd)
+        plot((0:(L2/2)-1) * FsNdengue / L2, yU2(1:L2/2), 'b');
+    end
+    
+    if N <= length(d)
+        f_tb = filter(num_b, den_b, ydengue);
+        Ftb = fft(f_tb, L2);
+        f_F1 = abs(Ftb);
+        
+        f_tm = filter(num_m, den_m, ydengue);
+        Ftm = fft(f_tm, L2);
+        f_F2 = abs(Ftm);
+        
+        R_dengue(N) = sum((f_F1).^2) / sum((f_F2).^2);
+    end
+    
+    if N <= length(nd)
+        f_sb = filter(num_b, den_b, yNdengue);
+        Fsb = fft(f_sb, L2);
+        f_F3 = abs(Fsb);
+        
+        f_sm = filter(num_m, den_m, yNdengue);
+        Fsm = fft(f_sm, L2);
+        f_F4 = abs(Fsm);
+        
+        R_Ndengue(N) = sum((f_F3).^2) / sum((f_F4).^2);
+    end
+end
+
+z = zeros(max(length(d), length(nd)), 1);
+figure;
+scatter(R_dengue, z, 'b');
+hold on;
+scatter(R_Ndengue, z, 'm');
+xlabel('Energy Ratio');
+ylabel('Samples');
+legend('Dengue', 'Non-Dengue');
+title('Energy Ratios for Dengue and Non-Dengue Mosquito Sounds');
