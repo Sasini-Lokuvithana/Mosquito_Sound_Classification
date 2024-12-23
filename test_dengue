@@ -1,0 +1,33 @@
+threshold =1.571;
+L2=8192;
+[num_b, den_b] = butter(6, [30, 510] / (8000 / 2), 'bandpass');
+[num_m, den_m] = butter(6, [560,1050] / (8000 / 2), 'bandpass');
+
+
+Te_dengue = dir('F:\eng\5TH SEM\MY WORKS\DSP\Task 02\Testing\dengue\*.wav');
+Te_Ndengue = dir('F:\eng\5TH SEM\MY WORKS\DSP\Task 02\Testing\non-dengue\*.wav');
+
+for n=1:length(Te_dengue)
+    Temp=Te_dengue(n).name;
+    [ydengue, Fsdengue] = audioread(['F:\eng\5TH SEM\MY WORKS\DSP\Task 02\Testing\dengue\',Temp]);
+    
+    y_sb = filter(num_b,den_b,ydengue);
+    ySb = fft(y_sb,L2);
+    T_t1= abs(ySb);
+    
+    y_sm = filter(num_m,den_m,ydengue);
+    ySm = fft(y_sm,L2);
+    T_t2 = abs(ySm);
+    
+    R_fin = sum((T_t1).^2)/sum((T_t2).^2); 
+    
+    if R_fin < threshold
+        disp('dengue');
+       
+    else
+        disp('Ndengue');
+      
+    end
+end
+
+
